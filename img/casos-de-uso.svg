@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 640" width="900" height="640" font-family="Segoe UI, Arial, sans-serif">
+  <title>Diagrama UML de casos de uso - Gestor de tarjetas Bip!</title>
+  <defs>
+    <marker id="abierta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+      <path d="M1 1 L9 5 L1 9" fill="none" stroke="#475569" stroke-width="1.6"/>
+    </marker>
+  </defs>
+  <rect width="900" height="640" fill="#ffffff"/>
+
+  <!-- límite del sistema  -->
+  <rect x="210" y="20" width="670" height="600" rx="14" fill="#f8fafc" stroke="#334155" stroke-width="2"/>
+  <text x="545" y="46" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">Sistema: Gestor de tarjetas Bip!</text>
+
+  <!-- ACTOR  -->
+  <g stroke="#0f172a" stroke-width="3" fill="none" stroke-linecap="round">
+    <circle cx="80" cy="250" r="22" fill="#fde68a"/>
+    <line x1="80" y1="272" x2="80" y2="350"/>
+    <line x1="30" y1="300" x2="130" y2="300"/>
+    <line x1="80" y1="350" x2="40" y2="410"/>
+    <line x1="80" y1="350" x2="120" y2="410"/>
+  </g>
+  <text x="80" y="440" text-anchor="middle" font-size="16" font-weight="700" fill="#0f172a">Usuario</text>
+  <text x="80" y="460" text-anchor="middle" font-size="12" fill="#475569">(administrador familiar)</text>
+
+  <!-- asociaciones actor → casos de uso (líneas continuas)  -->
+  <g stroke="#0f172a" stroke-width="1.8" fill="none">
+    <line x1="105" y1="290" x2="276" y2="130"/>
+    <line x1="108" y1="305" x2="276" y2="290"/>
+    <line x1="108" y1="320" x2="276" y2="440"/>
+    <line x1="105" y1="335" x2="276" y2="570"/>
+  </g>
+
+  <!-- relaciones include / extend (punteadas)  -->
+  <g stroke="#475569" stroke-width="1.6" fill="none" stroke-dasharray="7 5" marker-end="url(#abierta)">
+    <!-- Buscar y filtrar   extend hacia  Listar  -->
+    <line x1="640" y1="100" x2="470" y2="118"/>
+    <!-- Listar  include hacia  Ver resumen  -->
+    <line x1="470" y1="140" x2="640" y2="170"/>
+    <!-- Registrar  include hacia  Validar datos  -->
+    <line x1="470" y1="290" x2="640" y2="326"/>
+    <!-- Editar  include hacia  Validar datos  -->
+    <line x1="470" y1="440" x2="640" y2="344"/>
+    <!-- Editar  include hacia  Cargar datos  -->
+    <line x1="470" y1="462" x2="640" y2="480"/>
+    <!-- Eliminar  include hacia  Confirmar  -->
+    <line x1="470" y1="570" x2="640" y2="570"/>
+    <!-- Mostrar error  extend hacia  Registrar  -->
+    <line x1="700" y1="240" x2="470" y2="268"/>
+  </g>
+  <g font-size="12" font-style="italic" fill="#475569" text-anchor="middle">
+    <text x="556" y="103">«extend»</text>
+    <text x="556" y="168">«include»</text>
+    <text x="574" y="294" transform="rotate(5 574 294)">«include»</text>
+    <text x="548" y="372" transform="rotate(-12 548 372)">«include»</text>
+    <text x="556" y="466">«include»</text>
+    <text x="556" y="562">«include»</text>
+    <text x="574" y="246" transform="rotate(-6 574 246)">«extend»</text>
+  </g>
+
+  <!-- CASOS DE USO PRINCIPALES (los 4 que inicia el usuario)  -->
+  <g stroke="#be123c" stroke-width="2" fill="#ffe4e6">
+    <ellipse cx="380" cy="130" rx="95" ry="32"/>
+    <ellipse cx="380" cy="280" rx="95" ry="32"/>
+    <ellipse cx="380" cy="450" rx="95" ry="32"/>
+    <ellipse cx="380" cy="570" rx="95" ry="32"/>
+  </g>
+  <g font-size="14" font-weight="700" fill="#881337" text-anchor="middle">
+    <text x="380" y="126">CU-01</text><text x="380" y="144" font-weight="600">Listar tarjetas</text>
+    <text x="380" y="276">CU-03</text><text x="380" y="294" font-weight="600">Registrar tarjeta</text>
+    <text x="380" y="446">CU-04</text><text x="380" y="464" font-weight="600">Editar tarjeta</text>
+    <text x="380" y="566">CU-05</text><text x="380" y="584" font-weight="600">Eliminar tarjeta</text>
+  </g>
+
+  <!-- CASOS DE USO SECUNDARIOS (incluidos / extendidos)  -->
+  <g stroke="#1d4ed8" stroke-width="2" fill="#dbeafe">
+    <ellipse cx="740" cy="90" rx="95" ry="30"/>
+    <ellipse cx="740" cy="180" rx="95" ry="30"/>
+    <ellipse cx="740" cy="235" rx="95" ry="26" />
+    <ellipse cx="740" cy="335" rx="95" ry="30"/>
+    <ellipse cx="740" cy="490" rx="95" ry="30"/>
+    <ellipse cx="740" cy="570" rx="95" ry="30"/>
+  </g>
+  <g font-size="13" font-weight="600" fill="#1e3a8a" text-anchor="middle">
+    <text x="740" y="86">CU-02</text><text x="740" y="104" font-weight="500">Buscar y filtrar</text>
+    <text x="740" y="177">Ver resumen de saldos</text>
+    <text x="740" y="239" font-weight="500">Mostrar error de duplicado</text>
+    <text x="740" y="331">Validar datos</text>
+    <text x="740" y="349" font-size="11" font-weight="400">(número, saldo, titular…)</text>
+    <text x="740" y="486">Cargar datos de la tarjeta</text>
+    <text x="740" y="504" font-size="11" font-weight="400">(obtener por id)</text>
+    <text x="740" y="567">Confirmar eliminación</text>
+  </g>
+
+  <!-- leyenda  -->
+  <g font-size="12" fill="#334155">
+    <ellipse cx="240" cy="612" rx="0" ry="0"/>
+    <rect x="226" y="598" width="14" height="14" rx="7" fill="#ffe4e6" stroke="#be123c" stroke-width="1.5"/>
+    <text x="246" y="610">Caso de uso que inicia el usuario</text>
+    <rect x="450" y="598" width="14" height="14" rx="7" fill="#dbeafe" stroke="#1d4ed8" stroke-width="1.5"/>
+    <text x="470" y="610">Caso de uso incluido / extendido</text>
+  </g>
+</svg>
