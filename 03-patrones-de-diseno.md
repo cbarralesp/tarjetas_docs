@@ -13,7 +13,7 @@ Un **patrón de diseño** es una solución probada a un problema que se repite. 
 | 5 | **Mapper** | Conversiones repetidas y desordenadas | `TarjetaBipMapper` | — |
 | 6 | **Dependency Injection** | Clases atadas a implementaciones concretas | Constructores de Service y Controller | `inject()` |
 | 7 | **Singleton** | Una sola instancia compartida | Beans de Spring | `providedIn: 'root'` |
-| 8 | **Builder** | Constructores con muchos parámetros | `TarjetaBip.builder()` (Lombok) | — |
+| 8 | **JavaBean (getter/setter)** | Atributos expuestos sin control | `TarjetaBip` con getters y setters | — |
 | 9 | **Front Controller** | Un único punto de entrada | `DispatcherServlet` de Spring | `Router` |
 | 10 | **Advice / AOP** | Código repetido en todos los controllers | `@RestControllerAdvice`, `@Transactional` | `errorInterceptor` |
 | 11 | **Observer** | Que la pantalla se actualice sola | — | `signal` / `computed` |
@@ -91,13 +91,16 @@ protected readonly store = inject(TarjetasStore);
 
 Spring crea **un solo** `TarjetaBipServiceImpl`; Angular crea **un solo** `TarjetasStore` (`providedIn: 'root'`). Todos comparten la misma instancia.
 
-## 8. Builder (Lombok)
+## 8. JavaBean (getter/setter)
 
 ```java
-TarjetaBip.builder().numero("12345678").titular("Ana").tipo(TipoTarjeta.NORMAL).saldo(BigDecimal.TEN).build();
+TarjetaBip entidad = new TarjetaBip();
+entidad.setNumero("12345678");
+entidad.setTitular("Ana");
+entidad.setSaldo(BigDecimal.TEN);
 ```
 
-**Por qué:** crear un objeto con 9 campos con un constructor es ilegible; el builder nombra cada dato.
+**Por qué:** los atributos son `private` y se accede a ellos por métodos. Así la clase decide qué se puede leer y qué se puede modificar: `TarjetaBip` no tiene `setId` ni setters de fechas, porque los asigna JPA. Todo escrito a mano, en Java puro.
 
 ## 9. Front Controller
 

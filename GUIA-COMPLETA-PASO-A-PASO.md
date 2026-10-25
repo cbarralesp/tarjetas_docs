@@ -205,7 +205,7 @@ El controller conoce solo la **interfaz**. Spring le entrega la implementación 
 | **Mapper** | Conversiones repetidas y desordenadas | `TarjetaBipMapper` |
 | **Dependency Injection** | Clases atadas a implementaciones concretas | constructores del Service y Controller |
 | **Singleton** | Una sola instancia compartida | Beans de Spring (`@Service`, `@Component`…) |
-| **Builder** | Constructores con muchos parámetros | `TarjetaBip.builder()` (Lombok) |
+| **JavaBean (getter/setter)** | Atributos privados con acceso controlado | `TarjetaBip` (getters y setters) |
 | **Front Controller** | Un solo punto de entrada | `DispatcherServlet` de Spring |
 | **Advice / AOP** | Código repetido en todos los controllers | `@RestControllerAdvice`, `@Transactional` |
 
@@ -226,7 +226,7 @@ El controller conoce solo la **interfaz**. Spring le entrega la implementación 
 
 **🎓 Teoría — ¿por qué empezar por la base de datos y las herramientas?**
 Una aplicación web de tres capas necesita tres cosas funcionando: el **cliente** (Angular o Swagger), el **servidor** (Spring Boot) y la **base de datos** (PostgreSQL). Si falla la base, todo lo demás falla con mensajes confusos; por eso se verifica primero.
-**JDK 21**: Spring Boot 3.5 exige Java 17+, y usamos 21 (LTS) para aprovechar `record` y mejor rendimiento. **Maven Wrapper (`mvnw`)**: un script que descarga la versión correcta de Maven, así todos compilan igual sin instalar nada. **Lombok**: en IntelliJ instala/activa el plugin *Lombok* y marca *Enable annotation processing*; en VS Code basta con la extensión *Language Support for Java*.
+**JDK 21**: Spring Boot 3.5 exige Java 17+, y usamos 21 (LTS) para aprovechar `record` y mejor rendimiento. **Maven Wrapper (`mvnw`)**: un script que descarga la versión correcta de Maven, así todos compilan igual sin instalar nada. El proyecto usa **Java puro**: no necesita plugins ni configuración especial en el IDE.
 
 **Necesitas:** JDK 21, PostgreSQL 18, un IDE (IntelliJ IDEA o VS Code + *Extension Pack for Java*), Node 22+ (para el Angular). **No necesitas instalar Maven**: el proyecto trae `mvnw`.
 
@@ -502,13 +502,6 @@ El proyecto en blanco ya trae los archivos de configuración. **Aún no escribes
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
-        <!-- Lombok: genera getters/setters/constructores/builder con anotaciones -->
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <optional>true</optional>
-        </dependency>
-
         <!-- Swagger UI para probar la API: http://localhost:8082/swagger-ui.html -->
         <dependency>
             <groupId>org.springdoc</groupId>
@@ -528,14 +521,6 @@ El proyecto en blanco ya trae los archivos de configuración. **Aún no escribes
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
-                <configuration>
-                    <excludes>
-                        <exclude>
-                            <groupId>org.projectlombok</groupId>
-                            <artifactId>lombok</artifactId>
-                        </exclude>
-                    </excludes>
-                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -547,7 +532,6 @@ El proyecto en blanco ya trae los archivos de configuración. **Aún no escribes
 - `<java.version>21`: compila con Java 21.
 - `starter-web`: Tomcat embebido + Jackson (JSON). `starter-validation`: `@NotBlank`, `@Pattern`… `starter-data-jpa` + `postgresql`: acceso a la BD (el driver solo se necesita al ejecutar: `scope runtime`).
 - `flyway-core` + `flyway-database-postgresql`: migraciones (desde Flyway 10 el soporte de cada BD es un módulo aparte).
-- `lombok` (`optional`): genera código al compilar; el plugin de Spring Boot lo excluye del `.jar` final.
 - `springdoc-openapi`: Swagger UI; es la única dependencia con versión explícita porque Spring Boot no la gestiona.
 
 📄 `src/main/resources/application.yml` — conexión a la BD con variables de entorno
@@ -714,7 +698,7 @@ psql -U postgres -h localhost -p 5432 -d tarjetas_db -c "SELECT numero, titular,
 
 **🎓 Teoría — Entity, ORM y Repository (el "Model" de MVC)**
 Un **ORM** (Hibernate/JPA) traduce entre objetos Java y filas SQL: una clase `@Entity` = una tabla, un atributo = una columna, un objeto = una fila.
-**Lombok** elimina el código repetitivo: `@Getter`/`@Setter` generan los métodos de acceso, `@NoArgsConstructor` el constructor vacío que JPA exige, `@AllArgsConstructor` el constructor completo, y `@Builder` un constructor fluido (`TarjetaBip.builder().numero("1").build()`).
+**Java puro:** la entity es una clase normal (un *JavaBean*): atributos `private`, un **constructor vacío** (JPA lo exige para crear objetos al leer de la base) y **getters/setters** escritos a mano. Solo se escriben los setters de lo que realmente se modifica: el `id` y las fechas los maneja JPA, por eso no tienen setter.
 **Ciclo de vida JPA:** `@PrePersist` y `@PreUpdate` son "ganchos" que JPA ejecuta justo antes del INSERT y del UPDATE; los usamos para fijar las fechas automáticamente.
 **Spring Data JPA** va más allá: con solo declarar una interfaz que extiende `JpaRepository<Entidad, TipoDelId>`, genera el CRUD completo en tiempo de ejecución. Además crea consultas leyendo el nombre del método (*query methods*): `existsByNumero` → `SELECT EXISTS(... WHERE numero = ?)`.
 **Al levantar, Hibernate compara cada Entity con su tabla** (`ddl-auto: validate`). Es tu primera verificación de que el Model está bien.
@@ -827,26 +811,16 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
  * ENTITY (el "Model" de MVC): representa la tabla tarjeta_bip.
- * Lombok genera getters, setters, constructores y el builder.
+ * Java puro: constructor vacío, getters y setters escritos a mano.
  */
 @Entity
 @Table(name = "tarjeta_bip")
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
 public class TarjetaBip {
 
     @Id
@@ -879,6 +853,72 @@ public class TarjetaBip {
     @Column(name = "actualizada_en", nullable = false)
     private LocalDateTime actualizadaEn;
 
+    /** Constructor vacío: JPA lo exige para crear la entidad al leer de la base. */
+    public TarjetaBip() {
+    }
+
+    // ---------- getters ----------
+    public Long getId() {
+        return id;
+    }
+
+    public String getNumero() {
+        return numero;
+    }
+
+    public String getTitular() {
+        return titular;
+    }
+
+    public String getAlias() {
+        return alias;
+    }
+
+    public TipoTarjeta getTipo() {
+        return tipo;
+    }
+
+    public BigDecimal getSaldo() {
+        return saldo;
+    }
+
+    public EstadoTarjeta getEstado() {
+        return estado;
+    }
+
+    public LocalDateTime getCreadaEn() {
+        return creadaEn;
+    }
+
+    public LocalDateTime getActualizadaEn() {
+        return actualizadaEn;
+    }
+
+    // ---------- setters (id y fechas los maneja JPA, por eso no tienen) ----------
+    public void setNumero(String numero) {
+        this.numero = numero;
+    }
+
+    public void setTitular(String titular) {
+        this.titular = titular;
+    }
+
+    public void setAlias(String alias) {
+        this.alias = alias;
+    }
+
+    public void setTipo(TipoTarjeta tipo) {
+        this.tipo = tipo;
+    }
+
+    public void setSaldo(BigDecimal saldo) {
+        this.saldo = saldo;
+    }
+
+    public void setEstado(EstadoTarjeta estado) {
+        this.estado = estado;
+    }
+
     /** Se ejecuta automáticamente justo antes del INSERT. */
     @PrePersist
     void antesDeGuardar() {
@@ -904,9 +944,9 @@ public class TarjetaBip {
 |---|---|
 | `@Entity` | Esta clase es una tabla para JPA |
 | `@Table(name = "tarjeta_bip")` | Nombre de la tabla (debe coincidir con la migración) |
-| `@Getter @Setter` (Lombok) | Genera todos los getters y setters |
-| `@NoArgsConstructor` | Constructor vacío (JPA lo exige) |
-| `@AllArgsConstructor @Builder` | Constructor completo y patrón *Builder* |
+| Constructor vacío `public TarjetaBip()` | JPA lo exige para crear la entidad al leer de la base |
+| Getters | Lectura de cada atributo (`getNumero()`…) |
+| Setters | Solo los que se modifican: `numero`, `titular`, `alias`, `tipo`, `saldo`, `estado` (el `id` y las fechas los asigna JPA) |
 | `@Id` + `@GeneratedValue(IDENTITY)` | Clave primaria que **genera la base de datos** (coincide con `GENERATED ALWAYS AS IDENTITY`) |
 | `@Column(nullable, unique, length)` | Refleja las restricciones de la tabla |
 | `@Enumerated(EnumType.STRING)` | Guarda el **nombre** del enum ("NORMAL"). Con `ORDINAL` guardaría 0,1,2 y reordenar el enum corrompería los datos |
@@ -1515,13 +1555,13 @@ import org.springframework.stereotype.Component;
 public class TarjetaBipMapper {
 
     public TarjetaBip aEntidad(CrearTarjetaRequest r) {
-        return TarjetaBip.builder()
-                .numero(r.numero().trim())
-                .titular(r.titular().trim())
-                .alias(limpiar(r.alias()))
-                .tipo(r.tipo())
-                .saldo(r.saldo())
-                .build();
+        TarjetaBip entidad = new TarjetaBip();
+        entidad.setNumero(r.numero().trim());
+        entidad.setTitular(r.titular().trim());
+        entidad.setAlias(limpiar(r.alias()));
+        entidad.setTipo(r.tipo());
+        entidad.setSaldo(r.saldo());
+        return entidad;
     }
 
     /** Copia los datos editables sobre una entidad existente (el número no se toca). */
@@ -1546,7 +1586,7 @@ public class TarjetaBipMapper {
 
 🔎 **Explicación**
 - `@Component`: bean genérico de Spring (se inyecta en el service).
-- `aEntidad`: DTO → Entity usando el **Builder** de Lombok. Aplica `trim()` y convierte alias vacío en `null`. No asigna id ni fechas (lo hacen la BD y `@PrePersist`).
+- `aEntidad`: DTO → Entity creando la entity con `new TarjetaBip()` y sus setters. Aplica `trim()` y convierte alias vacío en `null`. No asigna id ni fechas (lo hacen la BD y `@PrePersist`).
 - `actualizarEntidad`: copia los datos editables **sobre la entidad que ya viene de la BD** (así se conserva el número y las fechas). No recibe `numero`: no es modificable.
 - `aRespuesta`: Entity → DTO de salida.
 - `limpiar`: un alias en blanco se guarda como "sin alias" (`null`).
@@ -2266,6 +2306,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -2304,7 +2345,7 @@ class TarjetaBipServiceImplTest {
         when(repository.existsByNumero("12345678")).thenReturn(false);
         when(repository.save(any(TarjetaBip.class))).thenAnswer(inv -> {
             TarjetaBip t = inv.getArgument(0);
-            t.setId(1L);
+            ReflectionTestUtils.setField(t, "id", 1L); // la BD real asigna el id
             t.setEstado(EstadoTarjeta.ACTIVA); // lo hace @PrePersist en la BD real
             return t;
         });
@@ -2334,8 +2375,12 @@ class TarjetaBipServiceImplTest {
 
     @Test
     void actualizaSinCambiarElNumero() {
-        TarjetaBip existente = TarjetaBip.builder().id(5L).numero("12345678").titular("Ana")
-                .tipo(TipoTarjeta.NORMAL).saldo(BigDecimal.TEN).estado(EstadoTarjeta.ACTIVA).build();
+        TarjetaBip existente = new TarjetaBip();
+        existente.setNumero("12345678");
+        existente.setTitular("Ana");
+        existente.setTipo(TipoTarjeta.NORMAL);
+        existente.setSaldo(BigDecimal.TEN);
+        existente.setEstado(EstadoTarjeta.ACTIVA);
         when(repository.findById(5L)).thenReturn(Optional.of(existente));
         when(repository.save(existente)).thenReturn(existente);
 
@@ -2547,7 +2592,6 @@ flowchart LR
 | `Port 8082 was already in use` | Otro programa (o tu backend anterior) usa el 8082 | Detén el anterior o `$env:SERVER_PORT = "8085"` |
 | `Schema-validation: missing column / wrong column type` | La Entity no coincide con la tabla | Revisa `TarjetaBip` (Paso 2) contra `V1__...sql` |
 | `No qualifying bean of type ...` | Falta `@Service`, `@Component` o `@Repository` | Agrega la anotación en la clase indicada |
-| `cannot find symbol: method getNumero()` / `builder()` | Lombok no está activo en el IDE | IntelliJ: plugin *Lombok* + *Enable annotation processing*; luego reconstruye |
 | `Detected non-empty schema... Flyway` | La BD ya tenía tablas | Usa una BD nueva (`tarjetas_db`) |
 | **`Migration checksum mismatch for migration version 2`** (Flyway) | Cambiaste (o actualizaste) el archivo `V2__datos_iniciales.sql` **después** de que Flyway ya lo había aplicado a tu base. Flyway guarda una "huella" (checksum) de cada migración y rechaza arrancar si cambió | **Opción 1 (recomendada en clases):** en pgAdmin, sobre `tarjetas_db`: `DROP TABLE IF EXISTS tarjeta_bip;` y `DROP TABLE IF EXISTS flyway_schema_history;` y reinicia: Flyway recrea todo con la V2 actual. **Opción 2:** `UPDATE flyway_schema_history SET checksum = <el número de "Resolved locally"> WHERE version = '2';` (los datos ya cargados no se tocan). **Regla de oro:** una migración ya aplicada **no se edita**; los cambios van en un archivo nuevo (`V3__...sql`) |
 | Flyway: *Unsupported Database: PostgreSQL 18* o el aviso *"Flyway upgrade recommended: PostgreSQL 18.1 is newer than this version of Flyway"* | Flyway 11.7 aún no "certifica" la versión 18 | Es solo un **WARN**: la aplicación arranca y funciona. Si llegara a ser un error, actualiza Spring Boot a la última 3.5.x |
@@ -2561,7 +2605,7 @@ flowchart LR
 - [ ] El **Service** no conoce HTTP (no usa `ResponseEntity`).
 - [ ] El **Repository** no tiene lógica de negocio.
 - [ ] Todos los errores salen como `ApiError`.
-- [ ] Cada clase con logs declara su `Logger` con `LoggerFactory` (sin Lombok) y usa el formato `--- texto: {} ---`.
+- [ ] Cada clase con logs declara su `Logger` con `LoggerFactory` (sin Lombok ni librerías extra) y usa el formato `--- texto: {} ---`.
 - [ ] Los logs no incluyen datos sensibles y el error inesperado se registra con la excepción (`log.error("...", ex)`).
 - [ ] `.\mvnw.cmd test` en verde (10 tests).
 - [ ] Las 10 pruebas de Swagger dan el resultado esperado y Angular carga las tarjetas.
