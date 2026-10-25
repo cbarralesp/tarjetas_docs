@@ -2410,6 +2410,8 @@ class TarjetaBipServiceImplTest {
 - `new TarjetaBipServiceImpl(repository, new TarjetaBipMapper())`: inyección de dependencias a mano, sin Spring.
 - `verify(repository, never()).save(any())`: comprueba que, ante un número duplicado, **no** se guardó nada.
 - `thenAnswer` simula lo que haría la BD (asignar id y estado).
+- `ReflectionTestUtils.setField(t, "id", 1L)` (de `spring-test`, ya incluido): como la entity no tiene `setId` (el id lo asigna la BD), el test lo escribe por reflexión para simular ese comportamiento sin ensuciar la clase de producción.
+- Las entidades de prueba se arman con `new TarjetaBip()` y sus setters, igual que hace el mapper.
 - Patrón **AAA**: *Arrange* (preparar), *Act* (ejecutar), *Assert* (verificar).
 
 ### 🧩 Archivo 7.2 · `TarjetaBipControllerTest` (class)
